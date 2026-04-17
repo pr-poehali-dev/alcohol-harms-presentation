@@ -1,488 +1,346 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/80f03b47-f833-4671-9abe-fdb1ff32b113/files/c6cc3b25-d07b-4bb0-abbc-220e61b0d9d9.jpg";
 
-function useInView(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setInView(true); },
-      { threshold }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return { ref, inView };
-}
-
-function AnimatedNumber({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const [value, setValue] = useState(0);
-  const { ref, inView } = useInView();
-  useEffect(() => {
-    if (!inView) return;
-    const duration = 1800;
-    const steps = 60;
-    const increment = target / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) { setValue(target); clearInterval(timer); }
-      else setValue(Math.floor(current));
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, [inView, target]);
-  return <span ref={ref}>{value.toLocaleString("ru-RU")}{suffix}</span>;
-}
-
-function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const { ref, inView } = useInView();
-  return (
-    <div
-      ref={ref}
-      className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-const navItems = [
-  { id: "intro", label: "Введение" },
-  { id: "stats", label: "Статистика" },
-  { id: "health", label: "Здоровье" },
-  { id: "prevention", label: "Профилактика" },
-  { id: "conclusion", label: "Выводы" },
-];
-
-export default function Index() {
-  const [active, setActive] = useState("intro");
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = navItems.map((n) => document.getElementById(n.id));
-      const scrollY = window.scrollY + 120;
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = sections[i];
-        if (el && el.offsetTop <= scrollY) { setActive(navItems[i].id); break; }
-      }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    setMenuOpen(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0d0f14] text-[#e8e0d5] font-golos">
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0d0f14]/90 backdrop-blur-md border-b border-[#2a1f1f]">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14">
-          <span className="font-cormorant text-[#c8332a] text-xl font-semibold italic">Алкоголь & здоровье</span>
-          <div className="hidden md:flex gap-1">
-            {navItems.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => scrollTo(n.id)}
-                className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${
-                  active === n.id
-                    ? "bg-[#c8332a]/20 text-[#e05a50]"
-                    : "text-[#9a8f8a] hover:text-[#e8e0d5]"
-                }`}
-              >
-                {n.label}
-              </button>
-            ))}
-          </div>
-          <button className="md:hidden text-[#9a8f8a]" onClick={() => setMenuOpen(!menuOpen)}>
-            <Icon name={menuOpen ? "X" : "Menu"} size={22} />
-          </button>
+const slides = [
+  // Слайд 0 — Титульный
+  {
+    id: "title",
+    label: "Титул",
+    content: (
+      <div className="flex flex-col items-center justify-center h-full text-center px-8">
+        <div className="mb-6">
+          <img src={HERO_IMAGE} alt="" className="w-40 h-40 object-cover rounded-full mx-auto opacity-60 border-4 border-[#c8332a]/40" />
         </div>
-        {menuOpen && (
-          <div className="md:hidden bg-[#13161d] border-t border-[#2a1f1f] px-4 py-3 flex flex-col gap-2">
-            {navItems.map((n) => (
-              <button key={n.id} onClick={() => scrollTo(n.id)} className="text-left py-2 text-[#e8e0d5] text-sm">
-                {n.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </nav>
-
-      {/* HERO — ВВЕДЕНИЕ */}
-      <section id="intro" className="relative min-h-screen flex items-center overflow-hidden pt-14">
-        <div className="absolute inset-0">
-          <img src={HERO_IMAGE} alt="hero" className="w-full h-full object-cover opacity-25" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0d0f14] via-[#0d0f14]/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f14] via-transparent to-transparent" />
+        <div className="inline-block bg-[#c8332a]/15 border border-[#c8332a]/30 rounded-full px-5 py-1.5 mb-6">
+          <span className="text-[#e05a50] text-sm font-medium tracking-wide">Учебная презентация</span>
         </div>
-        <div className="relative max-w-6xl mx-auto px-6 py-24">
-          <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div className="inline-flex items-center gap-2 bg-[#c8332a]/15 border border-[#c8332a]/30 rounded-full px-4 py-1.5 mb-8">
-              <div className="w-2 h-2 rounded-full bg-[#e05a50] animate-pulse" />
-              <span className="text-[#e05a50] text-sm font-medium tracking-wide">Важная информация</span>
+        <h1 className="font-cormorant text-5xl md:text-6xl font-semibold leading-tight mb-4 text-[#e8e0d5]">
+          Алкоголь —<br />
+          <span className="text-[#c8332a] italic">угроза здоровью</span>
+        </h1>
+        <p className="text-[#9a8f8a] text-lg max-w-md mb-10 leading-relaxed">
+          Факты, статистика и методы профилактики
+        </p>
+        <div className="border-t border-[#2a2030] pt-8 w-full max-w-sm">
+          <p className="text-[#6a5f5f] text-sm mb-1">Выполнил: <span className="text-[#e8e0d5] font-medium">Илья Садомов</span></p>
+          <p className="text-[#6a5f5f] text-sm">Руководитель: <span className="text-[#e8e0d5] font-medium">Екатерина Геннадьевна</span></p>
+        </div>
+      </div>
+    ),
+  },
+
+  // Слайд 1 — Введение
+  {
+    id: "intro",
+    label: "Введение",
+    content: (
+      <div className="flex flex-col justify-center h-full px-8 md:px-16 max-w-4xl mx-auto w-full">
+        <span className="text-[#c8332a] text-sm font-medium tracking-widest uppercase mb-4 block">Слайд 1 — Введение</span>
+        <h2 className="font-cormorant text-4xl md:text-5xl font-semibold mb-8 text-[#e8e0d5]">
+          Что такое алкоголь<br />и почему это проблема?
+        </h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-6">
+            <div className="text-3xl mb-3">🍷</div>
+            <h3 className="font-semibold text-[#e8e0d5] mb-2">Что такое алкоголь</h3>
+            <p className="text-[#7a6f6f] text-sm leading-relaxed">
+              Этанол — психоактивное вещество, вызывающее зависимость. ВОЗ признаёт его канцерогеном 1-й группы — наравне с табаком и асбестом.
+            </p>
+          </div>
+          <div className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-6">
+            <div className="text-3xl mb-3">🌍</div>
+            <h3 className="font-semibold text-[#e8e0d5] mb-2">Масштаб проблемы</h3>
+            <p className="text-[#7a6f6f] text-sm leading-relaxed">
+              Алкоголь — третья по значимости причина смертности в мире. Ежегодно от него погибает более <strong className="text-[#e8e0d5]">3 миллионов человек</strong>.
+            </p>
+          </div>
+          <div className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-6">
+            <div className="text-3xl mb-3">🇷🇺</div>
+            <h3 className="font-semibold text-[#e8e0d5] mb-2">Ситуация в России</h3>
+            <p className="text-[#7a6f6f] text-sm leading-relaxed">
+              Россия входит в топ-10 стран по потреблению алкоголя на душу населения. Около 70% взрослых россиян употребляют алкоголь.
+            </p>
+          </div>
+          <div className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-6">
+            <div className="text-3xl mb-3">🎯</div>
+            <h3 className="font-semibold text-[#e8e0d5] mb-2">Цель презентации</h3>
+            <p className="text-[#7a6f6f] text-sm leading-relaxed">
+              Показать реальный вред алкоголя на основе научных данных и рассказать о методах профилактики зависимости.
+            </p>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+
+  // Слайд 2 — Статистика
+  {
+    id: "stats",
+    label: "Статистика",
+    content: (
+      <div className="flex flex-col justify-center h-full px-8 md:px-16 max-w-4xl mx-auto w-full">
+        <span className="text-[#c8332a] text-sm font-medium tracking-widest uppercase mb-4 block">Слайд 2 — Статистика и факты</span>
+        <h2 className="font-cormorant text-4xl md:text-5xl font-semibold mb-8 text-[#e8e0d5]">
+          Цифры, которые<br />говорят сами за себя
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {[
+            { value: "3 млн+", label: "смертей в год", sub: "в мире от алкоголя", icon: "Skull" },
+            { value: "5%", label: "всех смертей", sub: "связаны с алкоголем", icon: "TrendingDown" },
+            { value: "200+", label: "болезней", sub: "провоцирует алкоголь", icon: "Activity" },
+            { value: "43%", label: "аварий на дорогах", sub: "по вине пьяных водителей", icon: "Car" },
+          ].map((stat, i) => (
+            <div key={i} className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-5 text-center">
+              <div className="w-9 h-9 rounded-full bg-[#c8332a]/10 flex items-center justify-center mx-auto mb-3">
+                <Icon name={stat.icon} size={16} className="text-[#c8332a]" fallback="AlertCircle" />
+              </div>
+              <div className="font-cormorant text-2xl font-bold text-[#e05a50] mb-1">{stat.value}</div>
+              <div className="font-semibold text-[#e8e0d5] text-xs mb-1">{stat.label}</div>
+              <div className="text-[#6a5f5f] text-xs">{stat.sub}</div>
             </div>
+          ))}
+        </div>
+        <div className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-6">
+          <h3 className="font-semibold text-[#e8e0d5] mb-4">Россия в цифрах (Росстат)</h3>
+          <div className="space-y-3">
+            {[
+              { label: "Употребляют алкоголь", percent: 70, color: "#c8332a" },
+              { label: "Употребляют регулярно", percent: 35, color: "#e05a50" },
+              { label: "Страдают алкоголизмом", percent: 8, color: "#ff7060" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-4">
+                <span className="text-[#9a8f8a] text-sm w-52 flex-shrink-0">{item.label}</span>
+                <div className="flex-1 h-2 bg-[#1e2028] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${item.percent}%`, backgroundColor: item.color }} />
+                </div>
+                <span className="text-[#e8e0d5] font-semibold text-sm w-10 text-right">{item.percent}%</span>
+              </div>
+            ))}
           </div>
-          <h1 className="font-cormorant text-5xl md:text-7xl font-semibold leading-tight mb-6 animate-fade-up" style={{ animationDelay: "0.2s" }}>
-            Алкоголь —<br />
-            <span className="text-[#c8332a] italic">скрытая угроза</span><br />
-            вашему здоровью
-          </h1>
-          <p className="text-[#9a8f8a] text-lg md:text-xl max-w-xl leading-relaxed mb-10 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-            Ежегодно от последствий употребления алкоголя в мире погибает более <strong className="text-[#e8e0d5]">3 миллионов человек</strong>. 
-            Это больше, чем от СПИДа, туберкулёза и малярии вместе взятых.
+        </div>
+      </div>
+    ),
+  },
+
+  // Слайд 3 — Влияние на здоровье
+  {
+    id: "health",
+    label: "Здоровье",
+    content: (
+      <div className="flex flex-col justify-center h-full px-8 md:px-16 max-w-4xl mx-auto w-full">
+        <span className="text-[#c8332a] text-sm font-medium tracking-widest uppercase mb-4 block">Слайд 3 — Влияние на здоровье</span>
+        <h2 className="font-cormorant text-4xl md:text-5xl font-semibold mb-8 text-[#e8e0d5]">
+          Алкоголь поражает<br />каждый орган
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          {[
+            { icon: "Brain", title: "Мозг", color: "#7c5cbf", items: ["Потеря памяти", "Депрессия, тревожность", "Риск инсульта ×3"] },
+            { icon: "Heart", title: "Сердце", color: "#c8332a", items: ["Кардиомиопатия", "Аритмия, гипертония", "Риск инфаркта ×4"] },
+            { icon: "Zap", title: "Печень", color: "#c8832a", items: ["Жировой гепатоз", "Алкогольный гепатит", "Цирроз (необратимо)"] },
+            { icon: "ShieldOff", title: "Иммунитет", color: "#2a7c5c", items: ["Снижение иммунитета", "Плохое заживление ран", "Онкологические риски"] },
+            { icon: "Baby", title: "Репродукция", color: "#2a5c8a", items: ["Снижение фертильности", "Риск выкидыша", "Врождённые дефекты"] },
+            { icon: "Bone", title: "Кости", color: "#6a7c2a", items: ["Остеопороз", "Атрофия мышц", "Повышенный риск переломов"] },
+          ].map((card, i) => (
+            <div key={i} className="bg-[#13161d] border rounded-xl p-4" style={{ borderColor: card.color + "40" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: card.color + "20" }}>
+                  <Icon name={card.icon} size={16} style={{ color: card.color }} fallback="AlertCircle" />
+                </div>
+                <span className="font-semibold text-[#e8e0d5] text-sm">{card.title}</span>
+              </div>
+              <ul className="space-y-1">
+                {card.items.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-xs text-[#7a6f6f]">
+                    <div className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: card.color }} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 bg-[#1a0f0f] border border-[#c8332a]/20 rounded-xl px-6 py-4 flex items-center gap-4">
+          <span className="text-2xl">⚠️</span>
+          <p className="text-[#9a8f8a] text-sm leading-relaxed">
+            <strong className="text-[#e05a50]">Нет безопасной дозы</strong> — ВОЗ и журнал The Lancet (195 стран, 2018): единственная безопасная доза алкоголя — нулевая.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{ animationDelay: "0.6s" }}>
-            <button
-              onClick={() => scrollTo("stats")}
-              className="inline-flex items-center gap-2 bg-[#c8332a] hover:bg-[#a8251e] text-white px-7 py-3 rounded-lg font-medium transition-all hover:scale-105"
-            >
-              Узнать факты <Icon name="ArrowDown" size={18} />
-            </button>
-            <button
-              onClick={() => scrollTo("prevention")}
-              className="inline-flex items-center gap-2 border border-[#3a2f2f] hover:border-[#c8332a]/50 text-[#9a8f8a] hover:text-[#e8e0d5] px-7 py-3 rounded-lg font-medium transition-all"
-            >
-              Методы защиты <Icon name="Shield" size={18} />
-            </button>
-          </div>
         </div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[#4a3f3f] animate-fade-in" style={{ animationDelay: "1s" }}>
-          <span className="text-xs tracking-widest uppercase">Листайте вниз</span>
-          <Icon name="ChevronDown" size={20} className="animate-bounce" />
-        </div>
-      </section>
+      </div>
+    ),
+  },
 
-      {/* СТАТИСТИКА */}
-      <section id="stats" className="py-24 bg-[#10121a]">
-        <div className="max-w-6xl mx-auto px-6">
-          <Section>
-            <div className="text-center mb-16">
-              <span className="text-[#c8332a] text-sm font-medium tracking-widest uppercase mb-3 block">Цифры и факты</span>
-              <h2 className="font-cormorant text-4xl md:text-5xl font-semibold mb-4">Статистика, которая<br /><em>не оставляет равнодушным</em></h2>
-              <p className="text-[#6a5f5f] max-w-xl mx-auto">Данные Всемирной организации здравоохранения и Росстата</p>
-            </div>
-          </Section>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-            {[
-              { value: 3000000, suffix: "+", label: "смертей в год", sublabel: "в мире от алкоголя", icon: "Skull" },
-              { value: 5, suffix: "%", label: "всех смертей", sublabel: "связаны с алкоголем", icon: "TrendingDown" },
-              { value: 200, suffix: "+", label: "болезней", sublabel: "провоцирует алкоголь", icon: "Activity" },
-              { value: 43, suffix: "%", label: "дорожных аварий", sublabel: "происходит по вине пьяных", icon: "Car" },
-            ].map((stat, i) => (
-              <Section key={i}>
-                <div
-                  className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-6 text-center hover:border-[#c8332a]/40 transition-all hover:bg-[#1a1520] group"
-                  style={{ transitionDelay: `${i * 0.1}s` }}
-                >
-                  <div className="w-10 h-10 rounded-full bg-[#c8332a]/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-[#c8332a]/20 transition-all">
-                    <Icon name={stat.icon} size={18} className="text-[#c8332a]" fallback="AlertCircle" />
-                  </div>
-                  <div className="font-cormorant text-3xl md:text-4xl font-bold text-[#e05a50] mb-1">
-                    <AnimatedNumber target={stat.value} suffix={stat.suffix} />
-                  </div>
-                  <div className="font-semibold text-[#e8e0d5] text-sm mb-1">{stat.label}</div>
-                  <div className="text-[#6a5f5f] text-xs">{stat.sublabel}</div>
-                </div>
-              </Section>
-            ))}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <Section>
-              <div className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-8">
-                <h3 className="font-cormorant text-2xl font-semibold mb-6 text-[#e8e0d5]">Россия в цифрах</h3>
-                <div className="space-y-4">
-                  {[
-                    { label: "Употребляют алкоголь", percent: 70, color: "#c8332a" },
-                    { label: "Употребляют регулярно", percent: 35, color: "#e05a50" },
-                    { label: "Страдают алкоголизмом", percent: 8, color: "#ff7060" },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-[#9a8f8a]">{item.label}</span>
-                        <span className="text-[#e8e0d5] font-medium">{item.percent}%</span>
-                      </div>
-                      <div className="h-2 bg-[#1e2028] rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-1000"
-                          style={{ width: `${item.percent}%`, backgroundColor: item.color }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Section>
-            <Section>
-              <div className="bg-[#15181f] border border-[#2a2030] rounded-2xl p-8">
-                <h3 className="font-cormorant text-2xl font-semibold mb-6 text-[#e8e0d5]">Средний возраст начала</h3>
-                <div className="space-y-4">
-                  {[
-                    { country: "🇷🇺 Россия", age: "13–14 лет" },
-                    { country: "🇩🇪 Германия", age: "15–16 лет" },
-                    { country: "🇺🇸 США", age: "15 лет" },
-                    { country: "🌍 Мировой средний", age: "16–17 лет" },
-                  ].map((item) => (
-                    <div key={item.country} className="flex justify-between items-center border-b border-[#2a2030] pb-3">
-                      <span className="text-[#9a8f8a]">{item.country}</span>
-                      <span className="font-semibold text-[#e05a50]">{item.age}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Section>
-          </div>
-        </div>
-      </section>
-
-      {/* ВЛИЯНИЕ НА ЗДОРОВЬЕ */}
-      <section id="health" className="py-24 bg-[#0d0f14]">
-        <div className="max-w-6xl mx-auto px-6">
-          <Section>
-            <div className="text-center mb-16">
-              <span className="text-[#c8332a] text-sm font-medium tracking-widest uppercase mb-3 block">Медицинская сторона</span>
-              <h2 className="font-cormorant text-4xl md:text-5xl font-semibold mb-4">Влияние на<br /><em>организм человека</em></h2>
-              <p className="text-[#6a5f5f] max-w-xl mx-auto">Алкоголь поражает каждый орган и систему организма</p>
-            </div>
-          </Section>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {[
-              {
-                icon: "Brain",
-                title: "Мозг и нервная система",
-                color: "#7c5cbf",
-                items: ["Потеря памяти и когнитивных функций", "Депрессия и тревожность", "Повреждение нейронов", "Риск инсульта в 3 раза выше"],
-                tag: "Необратимо"
-              },
-              {
-                icon: "Heart",
-                title: "Сердце и сосуды",
-                color: "#c8332a",
-                items: ["Кардиомиопатия (разрушение сердца)", "Аритмия и тахикардия", "Гипертония", "Риск инфаркта в 2–4 раза выше"],
-                tag: "Опасно"
-              },
-              {
-                icon: "Zap",
-                title: "Печень и пищеварение",
-                color: "#c8832a",
-                items: ["Жировой гепатоз", "Алкогольный гепатит", "Цирроз (необратимо)", "Рак печени, поджелудочной"],
-                tag: "Критично"
-              },
-              {
-                icon: "Shield",
-                title: "Иммунная система",
-                color: "#2a7c5c",
-                items: ["Снижение иммунитета", "Плохое заживление ран", "Рост риска инфекций", "Онкологические риски"],
-                tag: "Системно"
-              },
-              {
-                icon: "Baby",
-                title: "Репродуктивная система",
-                color: "#2a5c8a",
-                items: ["Снижение фертильности", "Риск выкидыша", "Фетальный алкогольный синдром", "Врождённые дефекты у детей"],
-                tag: "Поколения"
-              },
-              {
-                icon: "Bone",
-                title: "Кости и мышцы",
-                color: "#6a7c2a",
-                items: ["Остеопороз", "Атрофия мышц", "Повышенный риск переломов", "Слабость и потеря координации"],
-                tag: "Скрытно"
-              },
-            ].map((card, i) => (
-              <Section key={i}>
-                <div
-                  className="bg-[#13161d] border rounded-2xl p-6 h-full transition-all group hover:translate-y-[-2px]"
-                  style={{ borderColor: card.color + "30" }}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: card.color + "20" }}>
-                      <Icon name={card.icon} size={22} style={{ color: card.color }} fallback="AlertCircle" />
-                    </div>
-                    <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ backgroundColor: card.color + "20", color: card.color }}>
-                      {card.tag}
-                    </span>
-                  </div>
-                  <h3 className="font-semibold text-[#e8e0d5] mb-4">{card.title}</h3>
-                  <ul className="space-y-2">
-                    {card.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-[#7a6f6f]">
-                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: card.color }} />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Section>
-            ))}
-          </div>
-
-          <Section>
-            <div className="bg-gradient-to-r from-[#1a0f0f] to-[#150f18] border border-[#c8332a]/20 rounded-2xl p-8 md:p-10">
-              <div className="flex flex-col md:flex-row gap-8 items-center">
-                <div className="text-6xl">⚠️</div>
-                <div>
-                  <h3 className="font-cormorant text-2xl font-semibold text-[#e8e0d5] mb-3">Нет безопасной дозы</h3>
-                  <p className="text-[#9a8f8a] leading-relaxed">
-                    В 2018 году исследование в журнале <em className="text-[#e8e0d5]">The Lancet</em> на основе данных 195 стран показало: 
-                    <strong className="text-[#e05a50]"> единственная безопасная доза алкоголя — нулевая</strong>. 
-                    Даже один бокал вина в неделю повышает риск онкологических заболеваний. 
-                    ВОЗ классифицирует алкоголь как канцероген 1-й группы (наивысшей опасности).
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Section>
-        </div>
-      </section>
-
-      {/* ПРОФИЛАКТИКА */}
-      <section id="prevention" className="py-24 bg-[#0c110e]">
-        <div className="max-w-6xl mx-auto px-6">
-          <Section>
-            <div className="text-center mb-16">
-              <span className="text-[#2a8c5c] text-sm font-medium tracking-widest uppercase mb-3 block">Защита и помощь</span>
-              <h2 className="font-cormorant text-4xl md:text-5xl font-semibold mb-4">Методы профилактики<br /><em className="text-[#3aaa70]">и защиты</em></h2>
-              <p className="text-[#5a7060] max-w-xl mx-auto">Эффективные стратегии, которые работают на уровне личности, семьи и общества</p>
-            </div>
-          </Section>
-
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {[
-              {
-                level: "👤 Личный уровень",
-                color: "#2a8c5c",
-                steps: [
-                  { num: "01", title: "Осознанность", desc: "Ведите дневник употребления. Поставьте чёткие цели и отслеживайте прогресс" },
-                  { num: "02", title: "Замените привычку", desc: "Найдите альтернативу: спорт, медитация, хобби — всё что занимает время и даёт удовольствие" },
-                  { num: "03", title: "Окружение", desc: "Общайтесь с людьми, которые не пьют или поддерживают ваш выбор" },
-                  { num: "04", title: "Обратитесь за помощью", desc: "Психолог или нарколог — это не слабость. Зависимость — это болезнь, которую лечат" },
-                ]
-              },
-              {
-                level: "👨‍👩‍👧 Семья и общество",
-                color: "#2a5c8c",
-                steps: [
-                  { num: "01", title: "Ранний разговор", desc: "Объясняйте детям о вреде алкоголя до 10 лет — до первых контактов со сверстниками" },
-                  { num: "02", title: "Личный пример", desc: "Дети копируют поведение родителей. Ваш пример — самый мощный инструмент профилактики" },
-                  { num: "03", title: "Безопасная среда", desc: "Поддерживайте школьные программы профилактики и кружки для занятий молодёжи" },
-                  { num: "04", title: "Поддержка близких", desc: "Если кто-то в семье зависим — изучите co-dependency и методы помощи без осуждения" },
-                ]
-              }
-            ].map((block, bi) => (
-              <Section key={bi}>
-                <div className="bg-[#111814] border rounded-2xl p-8 h-full" style={{ borderColor: block.color + "30" }}>
-                  <h3 className="font-cormorant text-2xl font-semibold mb-6" style={{ color: block.color }}>{block.level}</h3>
-                  <div className="space-y-5">
-                    {block.steps.map((step) => (
-                      <div key={step.num} className="flex gap-4">
-                        <div className="text-2xl font-cormorant font-bold opacity-30 leading-none mt-1" style={{ color: block.color }}>
-                          {step.num}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-[#e8e0d5] mb-1">{step.title}</div>
-                          <div className="text-[#6a7a6a] text-sm leading-relaxed">{step.desc}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Section>
-            ))}
-          </div>
-
-          <Section>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  // Слайд 4 — Профилактика
+  {
+    id: "prevention",
+    label: "Профилактика",
+    content: (
+      <div className="flex flex-col justify-center h-full px-8 md:px-16 max-w-4xl mx-auto w-full">
+        <span className="text-[#2a8c5c] text-sm font-medium tracking-widest uppercase mb-4 block">Слайд 4 — Методы профилактики</span>
+        <h2 className="font-cormorant text-4xl md:text-5xl font-semibold mb-8 text-[#e8e0d5]">
+          Как защитить себя<br /><span className="text-[#3aaa70]">и близких?</span>
+        </h2>
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-[#111814] border border-[#2a8c5c]/25 rounded-2xl p-6">
+            <h3 className="font-cormorant text-xl font-semibold text-[#3aaa70] mb-4">👤 Личный уровень</h3>
+            <div className="space-y-3">
               {[
-                { icon: "Phone", title: "Горячая линия", desc: "8-800-200-0-200", sub: "Бесплатно, анонимно" },
-                { icon: "MapPin", title: "Наркологи РФ", desc: "narko.ru", sub: "Найдите специалиста" },
-                { icon: "Users", title: "АА и АН", desc: "Группы поддержки", sub: "Анонимно, бесплатно" },
-                { icon: "BookOpen", title: "Самопомощь", desc: "Дневник и план", sub: "Начните сегодня" },
-              ].map((item, i) => (
-                <div key={i} className="bg-[#111814] border border-[#1e2a22] rounded-xl p-5 text-center hover:border-[#2a8c5c]/40 transition-all">
-                  <div className="w-10 h-10 rounded-full bg-[#2a8c5c]/10 flex items-center justify-center mx-auto mb-3">
-                    <Icon name={item.icon} size={18} className="text-[#3aaa70]" fallback="CircleAlert" />
+                { n: "01", t: "Осознанность", d: "Ведите дневник — отслеживайте и ставьте цели" },
+                { n: "02", t: "Замените привычку", d: "Спорт, медитация, хобби — альтернативы без вреда" },
+                { n: "03", t: "Окружение", d: "Общайтесь с людьми, которые поддерживают ваш выбор" },
+                { n: "04", t: "Обратитесь за помощью", d: "Психолог или нарколог — зависимость лечится" },
+              ].map((s) => (
+                <div key={s.n} className="flex gap-3">
+                  <span className="font-cormorant text-xl font-bold text-[#2a8c5c]/40">{s.n}</span>
+                  <div>
+                    <div className="text-[#e8e0d5] text-sm font-semibold">{s.t}</div>
+                    <div className="text-[#5a7060] text-xs">{s.d}</div>
                   </div>
-                  <div className="font-semibold text-[#e8e0d5] text-sm mb-1">{item.title}</div>
-                  <div className="text-[#3aaa70] text-sm font-medium mb-1">{item.desc}</div>
-                  <div className="text-[#5a7060] text-xs">{item.sub}</div>
                 </div>
               ))}
             </div>
-          </Section>
-        </div>
-      </section>
-
-      {/* ЗАКЛЮЧЕНИЕ */}
-      <section id="conclusion" className="py-24 bg-[#0d0f14]">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <Section>
-            <span className="text-[#c8332a] text-sm font-medium tracking-widest uppercase mb-3 block">Подведём итог</span>
-            <h2 className="font-cormorant text-4xl md:text-6xl font-semibold mb-8 leading-tight">
-              Выводы и<br /><em className="text-[#c8332a]">призыв к действию</em>
-            </h2>
-          </Section>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {[
-              { emoji: "🚫", title: "Алкоголь — не норма", desc: "Культура «умеренного» потребления формировалась алкогольными компаниями. Научных доказательств «безопасного» количества не существует." },
-              { emoji: "🧠", title: "Это болезнь", desc: "Алкоголизм — хроническое заболевание мозга. Как и при диабете, здесь нужны профессиональная помощь и поддержка, а не осуждение." },
-              { emoji: "🌱", title: "Выход есть", desc: "Тысячи людей ежегодно побеждают зависимость. Раннее обращение за помощью значительно улучшает прогноз восстановления." },
-            ].map((item, i) => (
-              <Section key={i}>
-                <div className="bg-[#13161d] border border-[#2a2030] rounded-2xl p-7 text-left">
-                  <div className="text-4xl mb-4">{item.emoji}</div>
-                  <h3 className="font-semibold text-[#e8e0d5] mb-3">{item.title}</h3>
-                  <p className="text-[#6a5f5f] text-sm leading-relaxed">{item.desc}</p>
-                </div>
-              </Section>
-            ))}
           </div>
-
-          <Section>
-            <div className="bg-gradient-to-br from-[#1a0f0f] to-[#0f0f1a] border border-[#c8332a]/25 rounded-3xl p-10 md:p-14">
-              <p className="font-cormorant text-2xl md:text-3xl italic text-[#c8a090] leading-relaxed mb-8">
-                «Здоровье — единственная роскошь, которую нельзя купить после того, как её потерял.»
-              </p>
-              <div className="w-12 h-px bg-[#c8332a]/40 mx-auto mb-8" />
-              <p className="text-[#6a5f5f] mb-8 leading-relaxed max-w-2xl mx-auto">
-                Знание — первый шаг к изменениям. Если вы или ваши близкие сталкиваетесь с проблемой алкоголя — 
-                обратитесь за помощью. Анонимно и безвозмездно.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                  href="tel:88002000200"
-                  className="inline-flex items-center justify-center gap-2 bg-[#c8332a] hover:bg-[#a8251e] text-white px-8 py-3.5 rounded-xl font-medium transition-all hover:scale-105"
-                >
-                  <Icon name="Phone" size={18} />
-                  Позвонить на горячую линию
-                </a>
-                <button
-                  onClick={() => scrollTo("intro")}
-                  className="inline-flex items-center justify-center gap-2 border border-[#3a2f2f] hover:border-[#c8332a]/40 text-[#9a8f8a] hover:text-[#e8e0d5] px-8 py-3.5 rounded-xl font-medium transition-all"
-                >
-                  <Icon name="ArrowUp" size={18} />
-                  Вернуться в начало
-                </button>
-              </div>
+          <div className="bg-[#111814] border border-[#2a5c8c]/25 rounded-2xl p-6">
+            <h3 className="font-cormorant text-xl font-semibold text-[#4a8cbf] mb-4">👨‍👩‍👧 Семья и общество</h3>
+            <div className="space-y-3">
+              {[
+                { n: "01", t: "Ранний разговор", d: "Объясните детям о вреде до 10 лет" },
+                { n: "02", t: "Личный пример", d: "Дети копируют поведение родителей" },
+                { n: "03", t: "Безопасная среда", d: "Поддерживайте школьные программы профилактики" },
+                { n: "04", t: "Поддержка близких", d: "Помогайте без осуждения — изучите методы помощи" },
+              ].map((s) => (
+                <div key={s.n} className="flex gap-3">
+                  <span className="font-cormorant text-xl font-bold text-[#2a5c8c]/40">{s.n}</span>
+                  <div>
+                    <div className="text-[#e8e0d5] text-sm font-semibold">{s.t}</div>
+                    <div className="text-[#4a5a6a] text-xs">{s.d}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </Section>
+          </div>
         </div>
-      </section>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { icon: "Phone", title: "Горячая линия", desc: "8-800-200-0-200", sub: "Бесплатно" },
+            { icon: "MapPin", title: "Наркологи РФ", desc: "narko.ru", sub: "Специалисты" },
+            { icon: "Users", title: "Группы АА / АН", desc: "Анонимно", sub: "Бесплатно" },
+            { icon: "BookOpen", title: "Самопомощь", desc: "Дневник и план", sub: "Сегодня" },
+          ].map((item, i) => (
+            <div key={i} className="bg-[#111814] border border-[#1e2a22] rounded-xl p-4 text-center">
+              <Icon name={item.icon} size={18} className="text-[#3aaa70] mx-auto mb-2" fallback="CircleAlert" />
+              <div className="text-[#e8e0d5] text-xs font-semibold mb-1">{item.title}</div>
+              <div className="text-[#3aaa70] text-xs">{item.desc}</div>
+              <div className="text-[#5a7060] text-xs">{item.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
 
-      {/* FOOTER */}
-      <footer className="border-t border-[#1e1a1a] py-8 text-center text-[#4a3f3f] text-sm">
-        <p>Материалы составлены на основе данных ВОЗ, Росстата и научных публикаций • 2024</p>
-      </footer>
+  // Слайд 5 — Заключение
+  {
+    id: "conclusion",
+    label: "Заключение",
+    content: (
+      <div className="flex flex-col justify-center h-full px-8 md:px-16 max-w-4xl mx-auto w-full">
+        <span className="text-[#c8332a] text-sm font-medium tracking-widest uppercase mb-4 block">Слайд 5 — Заключение и выводы</span>
+        <h2 className="font-cormorant text-4xl md:text-5xl font-semibold mb-8 text-[#e8e0d5]">
+          Выводы
+        </h2>
+        <div className="grid md:grid-cols-3 gap-5 mb-8">
+          {[
+            { emoji: "🚫", title: "Нет безопасной дозы", desc: "Алкоголь в любом количестве повышает риск онкологии, болезней сердца и мозга. Понятие «умеренное потребление» — миф." },
+            { emoji: "🧠", title: "Алкоголизм — болезнь", desc: "Это хроническое заболевание мозга, а не слабость характера. Оно поддаётся лечению при своевременном обращении за помощью." },
+            { emoji: "🌱", title: "Выход есть всегда", desc: "Тысячи людей ежегодно побеждают зависимость. Главное — сделать первый шаг и обратиться за поддержкой." },
+          ].map((item, i) => (
+            <div key={i} className="bg-[#13161d] border border-[#2a2030] rounded-2xl p-6">
+              <div className="text-4xl mb-3">{item.emoji}</div>
+              <h3 className="font-semibold text-[#e8e0d5] mb-2 text-sm">{item.title}</h3>
+              <p className="text-[#6a5f5f] text-xs leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="bg-gradient-to-br from-[#1a0f0f] to-[#0f0f1a] border border-[#c8332a]/25 rounded-2xl p-7 text-center">
+          <p className="font-cormorant text-xl md:text-2xl italic text-[#c8a090] leading-relaxed mb-5">
+            «Здоровье — единственная роскошь, которую нельзя купить после того, как её потерял.»
+          </p>
+          <p className="text-[#6a5f5f] text-sm max-w-xl mx-auto">
+            Материалы составлены на основе данных ВОЗ, Росстата и научных публикаций
+          </p>
+          <div className="mt-5 pt-5 border-t border-[#2a2030]">
+            <p className="text-[#6a5f5f] text-sm">Выполнил: <span className="text-[#e8e0d5] font-medium">Илья Садомов</span> · Руководитель: <span className="text-[#e8e0d5] font-medium">Екатерина Геннадьевна</span></p>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+];
+
+export default function Index() {
+  const [current, setCurrent] = useState(0);
+
+  const prev = () => setCurrent((c) => Math.max(0, c - 1));
+  const next = () => setCurrent((c) => Math.min(slides.length - 1, c + 1));
+
+  return (
+    <div className="h-screen bg-[#0d0f14] text-[#e8e0d5] font-golos flex flex-col overflow-hidden">
+      {/* TOP BAR */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-[#1e1a1a] flex-shrink-0">
+        <span className="font-cormorant text-[#c8332a] text-lg font-semibold italic">Алкоголь & здоровье</span>
+        <div className="hidden md:flex items-center gap-1">
+          {slides.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => setCurrent(i)}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                current === i ? "bg-[#c8332a]/20 text-[#e05a50]" : "text-[#6a5f5f] hover:text-[#e8e0d5]"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <span className="text-[#4a3f3f] text-sm">{current + 1} / {slides.length}</span>
+      </div>
+
+      {/* SLIDE */}
+      <div className="flex-1 overflow-y-auto">
+        {slides[current].content}
+      </div>
+
+      {/* BOTTOM NAV */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-[#1e1a1a] flex-shrink-0">
+        <button
+          onClick={prev}
+          disabled={current === 0}
+          className="flex items-center gap-2 px-5 py-2 rounded-lg border border-[#2a2030] text-[#9a8f8a] hover:text-[#e8e0d5] hover:border-[#c8332a]/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+        >
+          <Icon name="ChevronLeft" size={16} /> Назад
+        </button>
+
+        <div className="flex gap-2">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`rounded-full transition-all ${
+                i === current ? "w-6 h-2 bg-[#c8332a]" : "w-2 h-2 bg-[#2a2030] hover:bg-[#4a3f3f]"
+              }`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={next}
+          disabled={current === slides.length - 1}
+          className="flex items-center gap-2 px-5 py-2 rounded-lg bg-[#c8332a] hover:bg-[#a8251e] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+        >
+          Далее <Icon name="ChevronRight" size={16} />
+        </button>
+      </div>
     </div>
   );
 }

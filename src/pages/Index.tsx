@@ -24,7 +24,7 @@ const slides = [
           Факты, статистика и методы профилактики
         </p>
         <div className="border-t border-[#2a2030] pt-8 w-full max-w-sm">
-          <p className="text-[#6a5f5f] text-sm mb-1">Выполнил: <span className="text-[#e8e0d5] font-medium">Илья Садомов</span></p>
+          <p className="text-[#6a5f5f] text-sm mb-1">Выполнил: <span className="text-[#e8e0d5] font-medium">Илья Садомов, 9Д</span></p>
           <p className="text-[#6a5f5f] text-sm">Руководитель: <span className="text-[#e8e0d5] font-medium">Екатерина Геннадьевна</span></p>
         </div>
       </div>

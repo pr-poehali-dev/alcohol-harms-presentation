@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
+const PPTX_URL = "https://functions.poehali.dev/94a5965c-a8c3-437c-bb6b-c18a07e7a719";
+
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/80f03b47-f833-4671-9abe-fdb1ff32b113/files/c6cc3b25-d07b-4bb0-abbc-220e61b0d9d9.jpg";
 
 const slides = [
@@ -214,9 +216,23 @@ const slides = [
 
 export default function Index() {
   const [current, setCurrent] = useState(0);
+  const [downloading, setDownloading] = useState(false);
 
   const prev = () => setCurrent((c) => Math.max(0, c - 1));
   const next = () => setCurrent((c) => Math.min(slides.length - 1, c + 1));
+
+  const downloadPptx = async () => {
+    setDownloading(true);
+    const res = await fetch(PPTX_URL);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "alkogol_i_zdorovye.pptx";
+    a.click();
+    URL.revokeObjectURL(url);
+    setDownloading(false);
+  };
 
   return (
     <div className="h-screen bg-[#0d0f14] text-[#e8e0d5] font-golos flex flex-col overflow-hidden">
@@ -236,7 +252,17 @@ export default function Index() {
             </button>
           ))}
         </div>
-        <span className="text-[#4a3f3f] text-sm">{current + 1} / {slides.length}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[#4a3f3f] text-sm">{current + 1} / {slides.length}</span>
+          <button
+            onClick={downloadPptx}
+            disabled={downloading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#2a2030] text-[#6a5f5f] hover:text-[#e8e0d5] hover:border-[#c8332a]/40 disabled:opacity-50 transition-colors text-xs font-medium"
+          >
+            <Icon name={downloading ? "Loader" : "Download"} size={14} className={downloading ? "animate-spin" : ""} />
+            {downloading ? "Генерация..." : "Скачать .pptx"}
+          </button>
+        </div>
       </div>
 
       {/* SLIDE */}
